@@ -578,12 +578,12 @@ function gHandleReturn(){
   try{sessionStorage.removeItem('gcc_oauth')}catch(e){}
   if(P.get('state')!==o.st)return '';
   if(P.get('error')){const er=P.get('error');return 'Google recusou: '+er+(P.get('error_description')?' — '+P.get('error_description'):'')+(er==='access_denied'?' (confira se seu e-mail está em Usuários de teste e se concluiu todas as etapas)':'')}
-  gTk[o.kind||'rw']={tok:P.get('access_token'),exp:Date.now()+(+P.get('expires_in')||3600)*1000};gTkSave();return 'ok'}
+  gTk[o.kind||'rw']={tok:P.get('access_token'),exp:Date.now()+(+P.get('expires_in')||3600)*1000};gTkSave();return 'ok:'+(o.kind||'rw')}
 const gErrMsg=e=>{const t=e&&(e.type||e.message||e.error)||'';return /popup_closed|closed/i.test(t)?'a janela de autorização do Google foi fechada antes de concluir — toque de novo e conclua todas as etapas (Avançado → Acessar → Continuar)':/popup_failed|blocked/i.test(t)?'o navegador bloqueou a janela do Google — permita pop-ups para este site e tente de novo':(e&&(e.message||e.type))||'login cancelado'};
 function loadGIS(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('sem conexão com o Google'));document.head.appendChild(s)})}
 async function gToken(interactive,kind){kind=kind||'ro';
   const c=gTk[kind];if(c&&Date.now()<c.exp-60000)return c.tok;
-  if(interactive&&kind==='rw'&&window.GCC_HOSTED)return gRedirect(kind);
+  if(interactive&&window.GCC_HOSTED)return gRedirect(kind);
   await loadGIS();
   return new Promise((res,rej)=>{
     const tc=google.accounts.oauth2.initTokenClient({client_id:gClient(),scope:GSC[kind],
@@ -731,7 +731,7 @@ document.addEventListener('input',e=>{const t=e.target;
 ['dragover','dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{const d=e.target.closest&&e.target.closest('#drop');if(!d)return;e.preventDefault();d.classList.toggle('over',ev==='dragover');if(ev==='drop'&&e.dataTransfer.files.length)importFiles([...e.dataTransfer.files])}));
 let rz,lastW=innerWidth;addEventListener('resize',()=>{if(innerWidth===lastW)return;const a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;lastW=innerWidth;clearTimeout(rz);rz=setTimeout(render,200)});
 load();render();
-if(window.GCC_HOSTED){const _r=gHandleReturn();if(_r){setTimeout(()=>{if(_r==='ok'){cfgSync(true).then(ok=>{toast(ok?'Classificações sincronizadas.':'Classificações: '+(S.drive.cfgErr||'falhou'));render()})}else{S.drive.cfgErr=_r;save();toast(_r);render()}},500)}}
+if(window.GCC_HOSTED){const _r=gHandleReturn();if(_r){setTimeout(()=>{if(_r==='ok:ro'){S.drive.connected=true;save();runSync(false)}else if(_r==='ok:rw'){cfgSync(true).then(ok=>{toast(ok?'Classificações sincronizadas.':'Classificações: '+(S.drive.cfgErr||'falhou'));render()})}else{S.drive.cfgErr=_r;save();toast(_r);render()}},500)}}
 if(window.GCC_HOSTED){if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
   if((S.drive.folder||S.drive.folderExt||S.drive.folderCfg)&&S.drive.connected&&gClient())setTimeout(()=>runSync(false),600);}
 </script>
